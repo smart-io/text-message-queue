@@ -42,8 +42,6 @@ class TextMessageQueueLogger implements LoggerInterface
         }
 
         $toNumber = isset($context['to'][0]) ? $context['to'][0] : null;
-        $fromNumber = isset($context['fromNumber']) ? $context['fromNumber']
-            : null;
         $mediaUrls = isset($context['mediaUrls']) ? $context['mediaUrls']
             : null;
 
@@ -67,16 +65,18 @@ class TextMessageQueueLogger implements LoggerInterface
 
         $body = '';
         $body .= 'Date: ' . date('Y-m-d H:i:s') . PHP_EOL;
-        $body .= 'From: ' . $fromNumber . PHP_EOL;
         $body .= 'To: ' . $toNumber . PHP_EOL . PHP_EOL;
         $body .= 'Message: ' . PHP_EOL;
         $body .= '-------------------------------' . PHP_EOL . PHP_EOL;
-        $body .= $message;
-        $body .= 'Media Urls: ' . PHP_EOL;
-        $body .= '-------------------------------' . PHP_EOL . PHP_EOL;
+        $body .= $message . PHP_EOL . PHP_EOL;
 
-        foreach ($mediaUrls as $mediaUrl) {
-            $body .= $mediaUrl . PHP_EOL;
+        if (!empty($mediaUrls)) {
+            $body .= 'Media Urls: ' . PHP_EOL;
+            $body .= '-------------------------------' . PHP_EOL . PHP_EOL;
+
+            foreach ($mediaUrls as $mediaUrl) {
+                $body .= $mediaUrl . PHP_EOL;
+            }
         }
 
         file_put_contents($file . '.txt', $body);
@@ -200,6 +200,12 @@ class TextMessageQueueLogger implements LoggerInterface
      */
     public function info($message, array $context = [])
     {
+        if (empty($context)) {
+            $this->writeLog('Info', $message);
+
+            return;
+        }
+
         if (isset($context['to'][0])) {
             $this->writeLog('Info',
                 "Sent text message to \"{$context['to'][0]}\" : \"{$message}\"");

@@ -48,12 +48,6 @@ class TextMessageQueueEntity
     private $to = null;
 
     /**
-     * @ORM\Column(type="string", name="from_number", length=255)
-     * @var string
-     */
-    private $fromNumber;
-
-    /**
      * @ORM\Column(type="text")
      * @var string
      */
@@ -177,26 +171,6 @@ class TextMessageQueueEntity
     public function setTo($to)
     {
         $this->to = $to;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getFromNumber()
-    {
-        return $this->fromNumber;
-    }
-
-    /**
-     * @param string $fromNumber
-     *
-     * @return $this
-     */
-    public function setFromNumber($fromNumber)
-    {
-        $this->fromNumber = $fromNumber;
 
         return $this;
     }

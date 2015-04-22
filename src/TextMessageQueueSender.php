@@ -46,7 +46,6 @@ class TextMessageQueueSender
             if ($this->driver->send($textMessageQueue)) {
                 $this->textMessageQueueLogger->info($textMessageQueue->getBody(),
                     [
-                        'fromNumber' => $textMessageQueue->getFromNumber(),
                         'to' => $textMessageQueue->getTo(),
                         'mediaUrls' => $textMessageQueue->getMediaUrls(),
                     ]);
@@ -56,7 +55,6 @@ class TextMessageQueueSender
         } catch (Exception $e) {
             $this->errorMessage = $e->getMessage();
             $this->textMessageQueueLogger->error($this->errorMessage, [
-                'fromNumber' => $textMessageQueue->getFromNumber(),
                 'to' => $textMessageQueue->getTo(),
                 'mediaUrls' => $textMessageQueue->getMediaUrls(),
             ]);

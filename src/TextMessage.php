@@ -16,11 +16,6 @@ abstract class TextMessage
     /**
      * @var string
      */
-    protected $fromNumber;
-
-    /**
-     * @var string
-     */
     protected $body;
 
     /**
@@ -58,7 +53,6 @@ abstract class TextMessage
 
         $textMessage = (new TextMessageQueueEntity())
             ->setTo($this->getTo())
-            ->setFromNumber($this->getFromNumber())
             ->setBody($this->getBody());
 
         foreach ($this->getMediaUrls() as $mediaUrl) {
@@ -96,26 +90,6 @@ abstract class TextMessage
     public function addTo($phoneNumber)
     {
         $this->to[] = $phoneNumber;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getFromNumber()
-    {
-        return $this->fromNumber;
-    }
-
-    /**
-     * @param string $fromNumber
-     *
-     * @return $this
-     */
-    public function setFromNumber($fromNumber)
-    {
-        $this->fromNumber = $fromNumber;
 
         return $this;
     }
