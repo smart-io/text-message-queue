@@ -67,8 +67,8 @@ abstract class TextMessage
         $this->entityManager->persist($textMessage);
         $this->entityManager->flush($textMessage);
 
-        $this->dispatcher->background(TextMessageQueueSendJob::JOB_NAME, null,
-            null,
+        $this->dispatcher->background(TextMessageQueueSendJob::JOB_NAME,
+            $textMessage->getId(), null,
             TextMessageQueueSendJob::JOB_NAME);
 
         return true;

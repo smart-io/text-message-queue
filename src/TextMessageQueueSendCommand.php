@@ -2,6 +2,7 @@
 
 namespace Smart\TextMessageQueue;
 
+use Doctrine\ORM\EntityManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -9,23 +10,37 @@ use Sinergi\Gearman\Dispatcher;
 
 class TextMessageQueueSendCommand extends Command
 {
-    const COMMAND_NAME = 'textmessagequeue:send';
+    const COMMAND_NAME = 'textmessagequeue:sendPending';
+
+    /**
+     * @var EntityManager
+     */
+    private $entityManager;
 
     /**
      * @var Dispatcher
      */
     private $gearmanDispatcher;
 
-    public function __construct(Dispatcher $gearmanDispatcher)
-    {
-        $this->gearmanDispatcher = $gearmanDispatcher;
+    /**
+     * @param EntityManager $entityManager
+     * @param Dispatcher    $gearmanDispatcher
+     */
+    public function __construct(
+        EntityManager $entityManager,
+        Dispatcher $gearmanDispatcher
+    ) {
+
+        $this->setEntityManager($entityManager);
+        $this->setGearmanDispatcher($gearmanDispatcher);
+
         parent::__construct();
     }
 
     protected function configure()
     {
         $this->setName(self::COMMAND_NAME)
-            ->setDescription('This sends the text message queue');
+            ->setDescription('This sends all pending text messages queue');
     }
 
     /**
@@ -36,10 +51,33 @@ class TextMessageQueueSendCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->write('Sending text message queue to gearman: ');
-        $this->getGearmanDispatcher()
-            ->execute(TextMessageQueueSendJob::JOB_NAME, null, null,
-                TextMessageQueueSendJob::JOB_NAME);
+        $textMessageRepository = $this->getEntityManager()
+            ->getRepository(TextMessageQueueEntity::class);
+
+        /** @var TextMessageQueueRepository $textMessageRepository */
+
+        $pendingMessages = $textMessageRepository->findAllUnlocked();
+
+        if (empty($pendingMessages)) {
+
+            $output->write('No pending messages...');
+
+            return;
+        }
+
+        $output->write('Sending ' . count($pendingMessages)
+            . ' text messages to gearman: ');
+
+        foreach ($pendingMessages as $pendingMessage) {
+
+            /** @var TextMessageQueueEntity $pendingMessage */
+
+            $this->getGearmanDispatcher()->execute(
+                TextMessageQueueSendJob::JOB_NAME, $pendingMessage->getId(),
+                null, TextMessageQueueSendJob::JOB_NAME
+            );
+        }
+
         $output->write('[ <fg=green>DONE</fg=green> ]', true);
     }
 
@@ -59,6 +97,26 @@ class TextMessageQueueSendCommand extends Command
     public function setGearmanDispatcher(Dispatcher $gearmanDispatcher)
     {
         $this->gearmanDispatcher = $gearmanDispatcher;
+
+        return $this;
+    }
+
+    /**
+     * @return EntityManager
+     */
+    public function getEntityManager()
+    {
+        return $this->entityManager;
+    }
+
+    /**
+     * @param EntityManager $entityManager
+     *
+     * @return $this
+     */
+    public function setEntityManager(EntityManager $entityManager)
+    {
+        $this->entityManager = $entityManager;
 
         return $this;
     }

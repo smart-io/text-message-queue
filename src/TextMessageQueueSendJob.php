@@ -68,7 +68,10 @@ class TextMessageQueueSendJob implements JobInterface
     public function execute(GearmanJob $job = null)
     {
 
-        $this->textMessageQueueLogger->info('Text message queue started');
+        $messageId = (int)unserialize($job->workload());
+
+        $this->textMessageQueueLogger->info('Processing text message #'
+            . $messageId . ' :');
 
         $this->entityManager->getConnection()->close();
         $this->entityManager->getConnection()->connect();
@@ -77,30 +80,42 @@ class TextMessageQueueSendJob implements JobInterface
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $messages = $this->textMessageQueueRepository->findAllUnlocked();
-        foreach ($messages as $message) {
-            $this->entityManager->refresh($message);
-            $message->lock();
-            $this->entityManager->persist($message);
+        $message
+            = $this->textMessageQueueRepository->findOneUnlockedById($messageId);
+
+        if (!($message instanceof TextMessageQueueEntity)) {
+
+            $this->textMessageQueueLogger->error('Text message #' . $messageId
+                . ' cannot be processed or doesn\'t exists');
+
+            $this->entityManager->getConnection()->close();
+
+            return;
         }
 
+        $this->entityManager->refresh($message);
+        $message->lock();
+        $this->entityManager->persist($message);
         $this->entityManager->flush();
 
-        foreach ($messages as $message) {
-            if (time() > ($timeStart + self::TIMEOUT)) {
-                break;
-            }
+        if (time() > ($timeStart + self::TIMEOUT)) {
 
-            $textMessageSender = (new TextMessageQueueSender($this->driver,
-                $this->textMessageQueueLogger));
+            $this->textMessageQueueLogger->error('Text message #' . $messageId
+                . ' timeout');
 
-            if ($textMessageSender->send($message)) {
-                $this->entityManager->getConnection()->close();
-                $this->entityManager->getConnection()->connect();
+            return;
+            $this->entityManager->getConnection()->close();
+        }
 
-                $this->entityManager->remove($message);
-                $this->entityManager->flush($message);
-            }
+        $textMessageSender = (new TextMessageQueueSender($this->driver,
+            $this->textMessageQueueLogger));
+
+        if ($textMessageSender->send($message)) {
+            $this->entityManager->getConnection()->close();
+            $this->entityManager->getConnection()->connect();
+
+            $this->entityManager->remove($message);
+            $this->entityManager->flush($message);
         }
 
         $this->entityManager->getConnection()->close();
