@@ -1,10 +1,10 @@
 <?php
 
-namespace Smart\TextMessageQueue\Driver;
+namespace Smart\TextMessageQueue\TextMessageDriver;
 
 use Smart\TextMessageQueue\TextMessageQueueEntity;
 
-interface DriverInterface
+interface TextMessageDriverInterface
 {
     /**
      * @param TextMessageQueueEntity $textMessageQueue

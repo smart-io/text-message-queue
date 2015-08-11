@@ -10,13 +10,15 @@ use Doctrine\ORM\EntityRepository;
 class TextMessageQueueRepository extends EntityRepository
 {
     /**
+     * @param int $id
      * @return TextMessageQueueEntity|null
      */
-    public function findOneUnlockedById()
+    public function findOneUnlockedById($id)
     {
 
         return $this->createQueryBuilder('e')
             ->where('e.isLocked = 0')
+            ->andWhere('e.id = '.$id)
             ->orWhere('e.lockedDatetime < :lockTimeExpiration')
             ->setParameter('lockTimeExpiration', $this->getLockTimeExpiration())
             ->getQuery()

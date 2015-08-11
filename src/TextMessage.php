@@ -3,8 +3,9 @@
 namespace Smart\TextMessageQueue;
 
 use Doctrine\ORM\EntityManager;
-use Sinergi\Gearman\Dispatcher;
+use Smart\TextMessageQueue\Job\TextMessageQueueSendJob;
 use Smart\TextMessageQueue\MediaUrl\MediaUrlEntity;
+use Smart\TextMessageQueue\Worker\WorkerDriverInterface;
 
 abstract class TextMessage
 {
@@ -29,20 +30,20 @@ abstract class TextMessage
     protected $entityManager;
 
     /**
-     * @var Dispatcher
+     * @var WorkerDriverInterface
      */
-    protected $dispatcher;
+    protected $worker;
 
     /**
      * @param EntityManager $entityManager
-     * @param Dispatcher    $dispatcher
+     * @param WorkerDriverInterface    $worker
      */
     public function __construct(
         EntityManager $entityManager,
-        Dispatcher $dispatcher
+        WorkerDriverInterface $worker
     ) {
         $this->entityManager = $entityManager;
-        $this->dispatcher = $dispatcher;
+        $this->worker = $worker;
     }
 
     /**
@@ -67,9 +68,7 @@ abstract class TextMessage
         $this->entityManager->persist($textMessage);
         $this->entityManager->flush($textMessage);
 
-        $this->dispatcher->background(TextMessageQueueSendJob::JOB_NAME,
-            $textMessage->getId(), null,
-            TextMessageQueueSendJob::JOB_NAME);
+        $this->worker->execute(TextMessageQueueSendJob::JOB_NAME, $textMessage->getId());
 
         return true;
     }

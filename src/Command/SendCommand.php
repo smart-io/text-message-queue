@@ -1,16 +1,19 @@
 <?php
 
-namespace Smart\TextMessageQueue;
+namespace Smart\TextMessageQueue\Command;
 
 use Doctrine\ORM\EntityManager;
+use Smart\TextMessageQueue\Dispatcher\DispatcherInterface;
+use Smart\TextMessageQueue\Job\TextMessageQueueSendJob;
+use Smart\TextMessageQueue\TextMessageQueueEntity;
+use Smart\TextMessageQueue\TextMessageQueueRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Sinergi\Gearman\Dispatcher;
 
-class TextMessageQueueSendCommand extends Command
+class SendCommand extends Command
 {
-    const COMMAND_NAME = 'textmessagequeue:sendPending';
+    const COMMAND_NAME = 'textmessagequeue:send';
 
     /**
      * @var EntityManager
@@ -18,21 +21,21 @@ class TextMessageQueueSendCommand extends Command
     private $entityManager;
 
     /**
-     * @var Dispatcher
+     * @var DispatcherInterface
      */
-    private $gearmanDispatcher;
+    private $dispatcher;
 
     /**
      * @param EntityManager $entityManager
-     * @param Dispatcher    $gearmanDispatcher
+     * @param DispatcherInterface    $dispatcher
      */
     public function __construct(
         EntityManager $entityManager,
-        Dispatcher $gearmanDispatcher
+        DispatcherInterface $dispatcher
     ) {
 
         $this->setEntityManager($entityManager);
-        $this->setGearmanDispatcher($gearmanDispatcher);
+        $this->setDispatcher($dispatcher);
 
         parent::__construct();
     }
@@ -66,37 +69,33 @@ class TextMessageQueueSendCommand extends Command
         }
 
         $output->write('Sending ' . count($pendingMessages)
-            . ' text messages to gearman: ');
+            . ' text messages to worker: ');
 
         foreach ($pendingMessages as $pendingMessage) {
 
             /** @var TextMessageQueueEntity $pendingMessage */
 
-            $this->getGearmanDispatcher()->execute(
-                TextMessageQueueSendJob::JOB_NAME, $pendingMessage->getId(),
-                null, TextMessageQueueSendJob::JOB_NAME
-            );
+            $this->getDispatcher()->dispatch(TextMessageQueueSendJob::JOB_NAME, $pendingMessage->getId());
         }
-
         $output->write('[ <fg=green>DONE</fg=green> ]', true);
     }
 
     /**
-     * @return Dispatcher
+     * @return DispatcherInterface
      */
-    public function getGearmanDispatcher()
+    public function getDispatcher()
     {
-        return $this->gearmanDispatcher;
+        return $this->dispatcher;
     }
 
     /**
-     * @param Dispatcher $gearmanDispatcher
+     * @param DispatcherInterface $dispatcher
      *
      * @return $this
      */
-    public function setGearmanDispatcher(Dispatcher $gearmanDispatcher)
+    public function setDispatcher(DispatcherInterface $dispatcher)
     {
-        $this->gearmanDispatcher = $gearmanDispatcher;
+        $this->dispatcher = $dispatcher;
 
         return $this;
     }

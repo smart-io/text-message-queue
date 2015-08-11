@@ -4,7 +4,7 @@ namespace Smart\TextMessageQueue;
 
 use Exception;
 use Psr\Log\LoggerInterface;
-use Smart\TextMessageQueue\Driver\DriverInterface;
+use Smart\TextMessageQueue\TextMessageDriver\TextMessageDriverInterface;
 
 class TextMessageQueueSender
 {
@@ -14,7 +14,7 @@ class TextMessageQueueSender
     protected $errorMessage;
 
     /**
-     * @var DriverInterface
+     * @var TextMessageDriverInterface
      */
     protected $driver;
 
@@ -24,11 +24,11 @@ class TextMessageQueueSender
     protected $textMessageQueueLogger;
 
     /**
-     * @param DriverInterface $driver
+     * @param TextMessageDriverInterface $driver
      * @param LoggerInterface $textMessageQueueLogger
      */
     public function __construct(
-        DriverInterface $driver,
+        TextMessageDriverInterface $driver,
         LoggerInterface $textMessageQueueLogger = null
     ) {
         $this->driver = $driver;

@@ -1,12 +1,12 @@
 <?php
 
-namespace Smart\TextMessageQueue\Driver;
+namespace Smart\TextMessageQueue\TextMessageDriver;
 
 use Exception;
 use Services_Twilio;
 use Smart\TextMessageQueue\TextMessageQueueEntity;
 
-class Twillio implements DriverInterface
+class Twillio implements TextMessageDriverInterface
 {
     /**
      * @var string

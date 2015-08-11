@@ -1,21 +1,22 @@
 <?php
 
-namespace Smart\TextMessageQueue;
+namespace Smart\TextMessageQueue\Job;
 
 use Doctrine\ORM\EntityManager;
-use GearmanJob;
 use Psr\Log\LoggerInterface;
-use Smart\TextMessageQueue\Driver\DriverInterface;
-use Sinergi\Gearman\JobInterface;
 use Doctrine\ORM\EntityRepository;
+use Smart\TextMessageQueue\TextMessageDriver\TextMessageDriverInterface;
+use Smart\TextMessageQueue\TextMessageQueueEntity;
+use Smart\TextMessageQueue\TextMessageQueueRepository;
+use Smart\TextMessageQueue\TextMessageQueueSender;
 
-class TextMessageQueueSendJob implements JobInterface
+abstract class TextMessageQueueSendJob
 {
     const JOB_NAME = 'textmessagequeue:send';
     const TIMEOUT = 60;
 
     /**
-     * @var DriverInterface
+     * @var TextMessageDriverInterface
      */
     private $driver;
 
@@ -35,13 +36,13 @@ class TextMessageQueueSendJob implements JobInterface
     private $textMessageQueueLogger;
 
     /**
-     * @param DriverInterface                             $driver
+     * @param TextMessageDriverInterface                  $driver
      * @param EntityManager                               $entityManager
      * @param TextMessageQueueRepository|EntityRepository $textMessageQueueRepository
      * @param null|LoggerInterface                        $textMessageQueueLogger
      */
     public function __construct(
-        DriverInterface $driver,
+        TextMessageDriverInterface $driver,
         EntityManager $entityManager,
         TextMessageQueueRepository $textMessageQueueRepository,
         LoggerInterface $textMessageQueueLogger = null
@@ -61,14 +62,12 @@ class TextMessageQueueSendJob implements JobInterface
     }
 
     /**
-     * @param GearmanJob|null $job
+     * @param int $messageId
      *
      * @return mixed
      */
-    public function execute(GearmanJob $job = null)
+    public function execute($messageId)
     {
-
-        $messageId = (int)unserialize($job->workload());
 
         $this->textMessageQueueLogger->info('Processing text message #'
             . $messageId . ' :');
@@ -103,8 +102,8 @@ class TextMessageQueueSendJob implements JobInterface
             $this->textMessageQueueLogger->error('Text message #' . $messageId
                 . ' timeout');
 
-            return;
             $this->entityManager->getConnection()->close();
+            return;
         }
 
         $textMessageSender = (new TextMessageQueueSender($this->driver,
