@@ -3,8 +3,8 @@
 namespace Smart\TextMessageQueue\Job;
 
 use Doctrine\ORM\EntityManager;
-use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityRepository;
+use Psr\Log\LoggerInterface;
 use Smart\TextMessageQueue\TextMessageDriver\TextMessageDriverInterface;
 use Smart\TextMessageQueue\TextMessageQueueEntity;
 use Smart\TextMessageQueue\TextMessageQueueRepository;
@@ -66,7 +66,7 @@ abstract class TextMessageQueueSendJob
      *
      * @return mixed
      */
-    public function execute($messageId)
+    public function executeJob($messageId)
     {
 
         $this->textMessageQueueLogger->info('Processing text message #'
@@ -103,6 +103,7 @@ abstract class TextMessageQueueSendJob
                 . ' timeout');
 
             $this->entityManager->getConnection()->close();
+
             return;
         }
 

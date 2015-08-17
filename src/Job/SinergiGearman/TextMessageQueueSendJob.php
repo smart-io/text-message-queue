@@ -10,15 +10,16 @@ class TextMessageQueueSendJob extends BaseJob implements JobInterface
 {
     /**
      * @param GearmanJob|null $job
+     *
      * @return void
      */
     public function execute(GearmanJob $job = null)
     {
 
-        if(!($job instanceof GearmanJob)){
+        if (!($job instanceof GearmanJob)) {
             return;
         }
 
-        parent::execute((int)unserialize($job->workload()));
+        parent::executeJob((int)unserialize($job->workload()));
     }
 }
