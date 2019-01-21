@@ -4,8 +4,7 @@
   "description": "Text message queue powered by Gearman",
   "keywords": [
     "Text Message",
-    "Queue",
-    "Gearman"
+    "Queue"
   ],
   "homepage": "https://github.com/smart-io/text-message-queue",
   "license": "MIT",
@@ -20,16 +19,12 @@
     "symfony/console": "~2",
     "doctrine/orm": "~2",
     "cocur/slugify": "~1",
-    "sinergi/gearman": "<1",
     "sinergi/token": "<1",
     "psr/log": "~1",
     "twilio/sdk": "dev-master"
   },
   "require-dev": {
     "phpunit/phpunit": "~4"
-  },
-  "suggest": {
-    "ext-gearman": "This library needs Gearman"
   },
   "autoload": {
     "psr-4": {
